@@ -34,7 +34,7 @@ func NewEvidenceReactor(evpool *EvidencePool) *EvidenceReactor {
 	evR := &EvidenceReactor{
 		evpool: evpool,
 	}
-	evR.BaseReactor = *p2p.NewBaseReactor("EvidenceReactor", evR)
+	evR.BaseReactor = *p2p.NewBaseReactor("Evidence", evR)
 	return evR
 }
 
@@ -154,7 +154,10 @@ func (evR *EvidenceReactor) broadcastEvidenceRoutine(peer p2p.Peer) {
 
 // Returns the message to send the peer, or nil if the evidence is invalid for the peer.
 // If message is nil, return true if we should sleep and try again.
-func (evR EvidenceReactor) checkSendEvidenceMessage(peer p2p.Peer, ev types.Evidence) (msg EvidenceMessage, retry bool) {
+func (evR EvidenceReactor) checkSendEvidenceMessage(
+	peer p2p.Peer,
+	ev types.Evidence,
+) (msg EvidenceMessage, retry bool) {
 	// make sure the peer is up to date
 	evHeight := ev.Height()
 	peerState, ok := peer.Get(types.PeerStateKey).(PeerState)
@@ -178,7 +181,14 @@ func (evR EvidenceReactor) checkSendEvidenceMessage(peer p2p.Peer, ev types.Evid
 		// evidence is too old, skip
 		// NOTE: if evidence is too old for an honest peer,
 		// then we're behind and either it already got committed or it never will!
-		evR.Logger.Info("Not sending peer old evidence", "peerHeight", peerHeight, "evHeight", evHeight, "maxAge", maxAge, "peer", peer)
+		evR.Logger.Info(
+			"Not sending peer old evidence",
+			"peerHeight", peerHeight,
+			"evHeight", evHeight,
+			"maxAge", maxAge,
+			"peer", peer,
+		)
+
 		return nil, false
 	}
 

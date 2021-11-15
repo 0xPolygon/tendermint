@@ -3,7 +3,6 @@ package rpcclient
 import (
 	"context"
 	"encoding/json"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -65,7 +64,8 @@ func TestWSClientReconnectsAfterReadFailure(t *testing.T) {
 	s := httptest.NewServer(h)
 	defer s.Close()
 
-	c := startClient(t, s.Listener.Addr())
+	// https://github.com/golang/go/issues/19297#issuecomment-282651469
+	c := startClient(t, "//" + s.Listener.Addr().String())
 	defer c.Stop()
 
 	wg.Add(1)
@@ -97,7 +97,8 @@ func TestWSClientReconnectsAfterWriteFailure(t *testing.T) {
 	h := &myHandler{}
 	s := httptest.NewServer(h)
 
-	c := startClient(t, s.Listener.Addr())
+	// https://github.com/golang/go/issues/19297#issuecomment-282651469
+	c := startClient(t, "//" + s.Listener.Addr().String())
 	defer c.Stop()
 
 	wg.Add(2)
@@ -125,7 +126,8 @@ func TestWSClientReconnectFailure(t *testing.T) {
 	h := &myHandler{}
 	s := httptest.NewServer(h)
 
-	c := startClient(t, s.Listener.Addr())
+	// https://github.com/golang/go/issues/19297#issuecomment-282651469
+	c := startClient(t, "//" + s.Listener.Addr().String())
 	defer c.Stop()
 
 	go func() {
@@ -174,7 +176,7 @@ func TestWSClientReconnectFailure(t *testing.T) {
 func TestNotBlockingOnStop(t *testing.T) {
 	timeout := 2 * time.Second
 	s := httptest.NewServer(&myHandler{})
-	c := startClient(t, s.Listener.Addr())
+	c := startClient(t, "//" + s.Listener.Addr().String())
 	c.Call(context.Background(), "a", make(map[string]interface{}))
 	// Let the readRoutine get around to blocking
 	time.Sleep(time.Second)
@@ -194,8 +196,8 @@ func TestNotBlockingOnStop(t *testing.T) {
 	}
 }
 
-func startClient(t *testing.T, addr net.Addr) *WSClient {
-	c := NewWSClient(addr.String(), "/websocket")
+func startClient(t *testing.T, addr string) *WSClient {
+	c := NewWSClient(addr, "/websocket")
 	err := c.Start()
 	require.Nil(t, err)
 	c.SetLogger(log.TestingLogger())
