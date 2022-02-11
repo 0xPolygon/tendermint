@@ -371,16 +371,41 @@ func execBlockOnProxyApp(
 		}
 		proxyAppConn.SetResponseCallback(proxySideCb)
 
+		// create channel for side-tx error response
+		resp := make(chan error, len(block.Txs))
+		executions := 0
+
 		// Run side-txs of block.
 		for txIndex, tx := range block.Txs {
 			txRes := abciResponses.DeliverTx[txIndex]
 
 			// execute side-tx only if tx is valid
 			if txRes.Code == abci.CodeTypeOK {
-				proxyAppConn.DeliverSideTxAsync(abci.RequestDeliverSideTx{Tx: tx})
-				if err := proxyAppConn.Error(); err != nil {
+				// execute the tx in a go routine and wait for the result
+				go func() {
+					proxyAppConn.DeliverSideTxAsync(abci.RequestDeliverSideTx{Tx: tx})
+					resp <- proxyAppConn.Error()
+				}()
+				executions++
+			}
+		}
+
+		count := 0
+		done := make(chan bool, 1)
+	WaitForCallback:
+		for {
+			select {
+			case err := <-resp:
+				// return when we have 1st non-nill error
+				if err != nil {
 					return nil, nil, err
 				}
+				count++
+				if count == executions {
+					done <- true
+				}
+			case <-done:
+				break WaitForCallback
 			}
 		}
 	}
