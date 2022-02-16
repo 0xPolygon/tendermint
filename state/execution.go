@@ -375,6 +375,8 @@ func execBlockOnProxyApp(
 		resp := make(chan error, len(block.Txs))
 		executions := 0
 
+		logger.Debug("[Peppermint] Executing side-tx", "number of txs", len(block.Txs))
+
 		// Run side-txs of block.
 		for txIndex, tx := range block.Txs {
 			txRes := abciResponses.DeliverTx[txIndex]
@@ -392,20 +394,22 @@ func execBlockOnProxyApp(
 
 		count := 0
 		done := make(chan bool, 1)
-	WaitForCallback:
-		for {
-			select {
-			case err := <-resp:
-				// return when we have 1st non-nill error
-				if err != nil {
-					return nil, nil, err
+		if executions > 0 {
+		WaitForCallback:
+			for {
+				select {
+				case err := <-resp:
+					// return when we have 1st non-nill error
+					if err != nil {
+						return nil, nil, err
+					}
+					count++
+					if count == executions {
+						done <- true
+					}
+				case <-done:
+					break WaitForCallback
 				}
-				count++
-				if count == executions {
-					done <- true
-				}
-			case <-done:
-				break WaitForCallback
 			}
 		}
 	}
