@@ -2,6 +2,7 @@ package state
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"golang.org/x/sync/errgroup"
 )
 
 //-----------------------------------------------------------------------------
@@ -371,11 +373,10 @@ func execBlockOnProxyApp(
 		}
 		proxyAppConn.SetResponseCallback(proxySideCb)
 
-		// create channel for side-tx error response
-		resp := make(chan error, len(block.Txs))
-		executions := 0
+		logger.Debug("[Peppermint] Delivering side-tx", "number of txs", len(block.Txs))
 
-		logger.Debug("[Peppermint] Executing side-tx", "number of txs", len(block.Txs))
+		// Creating an error group.
+		group, _ := errgroup.WithContext(context.Background())
 
 		// Run side-txs of block.
 		for txIndex, tx := range block.Txs {
@@ -383,34 +384,20 @@ func execBlockOnProxyApp(
 
 			// execute side-tx only if tx is valid
 			if txRes.Code == abci.CodeTypeOK {
-				// execute the tx in a go routine and wait for the result
-				go func() {
-					proxyAppConn.DeliverSideTxAsync(abci.RequestDeliverSideTx{Tx: tx})
-					resp <- proxyAppConn.Error()
-				}()
-				executions++
+				// execute the tx in a go routine and return the result of error
+				func(tx types.Tx) {
+					group.Go(func() error {
+						proxyAppConn.DeliverSideTxAsync(abci.RequestDeliverSideTx{Tx: tx})
+						return proxyAppConn.Error()
+					})
+				}(tx)
 			}
 		}
 
-		count := 0
-		done := make(chan bool, 1)
-		if executions > 0 {
-		WaitForCallback:
-			for {
-				select {
-				case err := <-resp:
-					// return when we have 1st non-nill error
-					if err != nil {
-						return nil, nil, err
-					}
-					count++
-					if count == executions {
-						done <- true
-					}
-				case <-done:
-					break WaitForCallback
-				}
-			}
+		// This will wait for all the routines to finish and also helps
+		// in gracefull shutdown in case any of it fails.
+		if err := group.Wait(); err != nil {
+			return nil, nil, err
 		}
 	}
 
