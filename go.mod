@@ -5,9 +5,8 @@ go 1.12
 require (
 	github.com/VividCortex/gohistogram v1.0.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.50
-	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
-	github.com/btcsuite/btcutil v0.0.0-20180706230648-ab6388e0c60a
+	github.com/btcsuite/btcd v0.22.1
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/ethereum/go-ethereum v0.0.0-00010101000000-000000000000
 	github.com/fortytw2/leaktest v1.3.0
 	github.com/go-kit/kit v0.9.0

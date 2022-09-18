@@ -1,3 +1,4 @@
+//go:build !libsecp256k1
 // +build !libsecp256k1
 
 package secp256k1
@@ -5,8 +6,8 @@ package secp256k1
 import (
 	"testing"
 
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // Ensure that signature verification works, and that
