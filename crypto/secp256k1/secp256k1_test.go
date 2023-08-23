@@ -5,14 +5,14 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec"
+	underlyingSecp256k1 "github.com/btcsuite/btcd/btcec/v2"
 )
 
 type keyData struct {
@@ -36,15 +36,14 @@ func TestPubKeySecp256k1Address(t *testing.T) {
 		addrBbz, _, _ := base58.CheckDecode(d.addr)
 		addrB := crypto.Address(addrBbz)
 
-		var priv secp256k1.PrivKeySecp256k1
-		copy(priv[:], privB)
+		priv := secp256k1.PrivKeySecp256k1(privB)
 
 		pubKey := priv.PubKey()
 		pubT, _ := pubKey.(secp256k1.PubKeySecp256k1)
-		pub := pubT[:]
+		pub := pubT
 		addr := pubKey.Address()
 
-		assert.Equal(t, pub, pubB, "Expected pub keys to match")
+		assert.Equal(t, pub, secp256k1.PubKeySecp256k1(pubB), "Expected pub keys to match")
 		assert.Equal(t, addr, addrB, "Expected addresses to match")
 	}
 }
@@ -76,7 +75,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 
 		// This function creates a private and public key in the underlying libraries format.
 		// The private key is basically calling new(big.Int).SetBytes(pk), which removes leading zero bytes
-		priv, _ := underlyingSecp256k1.PrivKeyFromBytes(underlyingSecp256k1.S256(), privKeyBytes[:])
+		priv, _ := underlyingSecp256k1.PrivKeyFromBytes(privKeyBytes[:])
 		// this takes the bytes returned by `(big int).Bytes()`, and if the length is less than 32 bytes,
 		// pads the bytes from the left with zero bytes. Therefore these two functions composed
 		// result in the identity function on privKeyBytes, hence the following equality check
@@ -94,7 +93,11 @@ func TestGenPrivKeySecp256k1(t *testing.T) {
 		secret []byte
 	}{
 		{"empty secret", []byte{}},
-		{"some long secret", []byte("We live in a society exquisitely dependent on science and technology, in which hardly anyone knows anything about science and technology.")},
+		{
+			"some long secret",
+			[]byte("We live in a society exquisitely dependent on science and technology, " +
+				"in which hardly anyone knows anything about science and technology."),
+		},
 		{"another seed used in cosmos tests #1", []byte{0}},
 		{"another seed used in cosmos tests #2", []byte("mySecret")},
 		{"another seed used in cosmos tests #3", []byte("")},
