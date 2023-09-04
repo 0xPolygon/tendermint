@@ -3,34 +3,33 @@ module github.com/tendermint/tendermint
 go 1.12
 
 require (
-	github.com/VividCortex/gohistogram v1.0.0 // indirect
-	github.com/Workiva/go-datastructures v1.0.50
-	github.com/btcsuite/btcd v0.0.0-20190115013929-ed77733ec07d
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
-	github.com/btcsuite/btcutil v0.0.0-20180706230648-ab6388e0c60a
-	github.com/ethereum/go-ethereum v0.0.0-00010101000000-000000000000
+	github.com/Workiva/go-datastructures v1.0.53
+	github.com/btcsuite/btcd v0.22.3
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
+	github.com/ethereum/go-ethereum v1.10.26
 	github.com/fortytw2/leaktest v1.3.0
-	github.com/go-kit/kit v0.9.0
-	github.com/go-logfmt/logfmt v0.5.0
-	github.com/gogo/protobuf v1.3.1
+	github.com/go-kit/kit v0.12.0
+	github.com/go-logfmt/logfmt v0.5.1
+	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
-	github.com/gorilla/websocket v1.4.2
-	github.com/libp2p/go-buffer-pool v0.0.2
-	github.com/magiconair/properties v1.8.1
+	github.com/gorilla/websocket v1.5.0
+	github.com/libp2p/go-buffer-pool v0.1.0
+	github.com/magiconair/properties v1.8.6
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.0.0
-	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165
-	github.com/rs/cors v1.7.0
+	github.com/prometheus/client_golang v1.14.0
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
+	github.com/rs/cors v1.8.2
 	github.com/snikch/goodman v0.0.0-20171125024755-10e37e294daa
-	github.com/spf13/cobra v0.0.3
-	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.7.0
-	github.com/stumble/gorocksdb v0.0.3 // indirect
-	github.com/tendermint/go-amino v0.14.1
-	github.com/tendermint/tm-db v0.2.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
-	google.golang.org/grpc v1.42.0
+	github.com/spf13/cobra v1.5.0
+	github.com/spf13/viper v1.13.0
+	github.com/stretchr/testify v1.8.0
+	github.com/tendermint/go-amino v0.16.0
+	github.com/tendermint/tm-db v0.6.7
+	golang.org/x/crypto v0.1.0
+	golang.org/x/net v0.8.0
+	google.golang.org/grpc v1.51.0
 )
 
-replace github.com/ethereum/go-ethereum => github.com/maticnetwork/bor v0.2.16
+replace github.com/ethereum/go-ethereum => github.com/maticnetwork/bor v1.0.0-beta
+
+replace github.com/tendermint/tm-db => github.com/tendermint/tm-db v0.2.0
