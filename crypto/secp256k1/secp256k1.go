@@ -16,10 +16,10 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-//-------------------------------------
+// -------------------------------------
 const (
-	PrivKeyAminoName = "tendermint/PrivKeySecp256k1"
-	PubKeyAminoName  = "tendermint/PubKeySecp256k1"
+	PrivKeyAminoName = "comet/PrivKeySecp256k1"
+	PubKeyAminoName  = "comet/PubKeySecp256k1"
 )
 
 var cdc = amino.NewCodec()
