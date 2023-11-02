@@ -370,7 +370,7 @@ func (r *PEXReactor) ReceiveAddrs(addrs []*p2p.NetAddress, src Peer) error {
 					case errMaxAttemptsToDial, errTooEarlyToDial:
 						r.Logger.Debug(err.Error(), "addr", addr)
 					default:
-						r.Logger.Error(err.Error(), "addr", addr)
+						r.Logger.Debug(err.Error(), "addr", addr)
 					}
 				}
 			}(netAddr)
@@ -479,7 +479,7 @@ func (r *PEXReactor) ensurePeers() {
 				case errMaxAttemptsToDial, errTooEarlyToDial:
 					r.Logger.Debug(err.Error(), "addr", addr)
 				default:
-					r.Logger.Error(err.Error(), "addr", addr)
+					r.Logger.Debug(err.Error(), "addr", addr)
 				}
 			}
 		}(addr)
@@ -678,7 +678,7 @@ func (r *PEXReactor) crawlPeers(addrs []*p2p.NetAddress) {
 			case errMaxAttemptsToDial, errTooEarlyToDial:
 				r.Logger.Debug(err.Error(), "addr", addr)
 			default:
-				r.Logger.Error(err.Error(), "addr", addr)
+				r.Logger.Debug(err.Error(), "addr", addr)
 			}
 			continue
 		}
