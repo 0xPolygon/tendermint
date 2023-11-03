@@ -150,8 +150,6 @@ func (r *PEXReactor) OnStart() error {
 
 	r.seedAddrs = seedAddrs
 
-	r.Logger.Info("Peer Info", "numPeers", r.Switch.Peers().Size())
-
 	// Check if this node should run
 	// in seed/crawler mode
 	if r.config.SeedMode {
@@ -227,8 +225,6 @@ func (r *PEXReactor) logErrAddrBook(err error) {
 
 // Receive implements Reactor by handling incoming PEX messages.
 func (r *PEXReactor) Receive(chID byte, src Peer, msgBytes []byte) {
-	r.Logger.Info("Peer Info", "numPeers", r.Switch.Peers().Size())
-
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
 		r.Logger.Error("Error decoding message", "src", src, "chId", chID, "msg", msg, "err", err, "bytes", msgBytes)
@@ -519,6 +515,12 @@ func (r *PEXReactor) dialAttemptsInfo(addr *p2p.NetAddress) (attempts int, lastD
 }
 
 func (r *PEXReactor) dialPeer(addr *p2p.NetAddress) error {
+	if r.Switch.Peers().Size() == 0 {
+		r.Logger.Error("Peer Info", "numPeers", r.Switch.Peers().Size())
+	} else {
+		r.Logger.Info("Peer Info", "numPeers", r.Switch.Peers().Size())
+	}
+
 	attempts, lastDialed := r.dialAttemptsInfo(addr)
 
 	if attempts > maxAttemptsToDial {
