@@ -150,6 +150,8 @@ func (r *PEXReactor) OnStart() error {
 
 	r.seedAddrs = seedAddrs
 
+	r.Logger.Info("Peer Info", "numPeers", r.Switch.Peers().Size())
+
 	// Check if this node should run
 	// in seed/crawler mode
 	if r.config.SeedMode {
@@ -225,6 +227,8 @@ func (r *PEXReactor) logErrAddrBook(err error) {
 
 // Receive implements Reactor by handling incoming PEX messages.
 func (r *PEXReactor) Receive(chID byte, src Peer, msgBytes []byte) {
+	r.Logger.Info("Peer Info", "numPeers", r.Switch.Peers().Size())
+
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
 		r.Logger.Error("Error decoding message", "src", src, "chId", chID, "msg", msg, "err", err, "bytes", msgBytes)
