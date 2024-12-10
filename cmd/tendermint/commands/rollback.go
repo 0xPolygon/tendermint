@@ -44,6 +44,10 @@ application.
 func RollbackState(config *cfg.Config) (int64, []byte, error) {
 	// use the parsed config to load the block and state store
 	blocksdb, statedb, err := loadStateAndBlockStore(config)
+	defer func() {
+		blocksdb.Close()
+		statedb.Close()
+	}()
 	if err != nil {
 		return -1, nil, err
 	}
