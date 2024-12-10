@@ -153,5 +153,6 @@ func rollbackState(blockStoreDB, stateDB db.DB) (int64, []byte, error) {
 
 	// saving the state
 	state.SaveState(stateDB, rolledBackState)
+	blockStore.RemoveLatestBlock()
 	return rolledBackState.LastBlockHeight, rolledBackState.AppHash, nil
 }

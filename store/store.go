@@ -188,6 +188,31 @@ func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, s
 	bs.db.SetSync(nil, nil)
 }
 
+// RemoveLatestBlock deletes the latest block from the store
+// and rewinds the latest height by 1.
+func (bs *BlockStore) RemoveLatestBlock() {
+	bs.mtx.RLock()
+	height := bs.Height()
+	bs.mtx.RUnlock()
+
+	blockMeta := bs.LoadBlockMeta(height)
+	// delete block parts
+	for i := 0; i < int(blockMeta.BlockID.PartsHeader.Total); i++ {
+		bs.db.Delete(calcBlockPartKey(height, i))
+	}
+
+	bs.db.Delete(calcBlockMetaKey(height))
+	bs.db.Delete(calcBlockCommitKey(height))
+	bs.db.Delete(calcSeenCommitKey(height))
+
+	// rollback height
+	bs.mtx.Lock()
+	bs.height = height - 1
+	bs.mtx.Unlock()
+
+	bs.db.SetSync(nil, nil)
+}
+
 func (bs *BlockStore) saveBlockPart(height int64, index int, part *types.Part) {
 	if height != bs.Height()+1 {
 		panic(fmt.Sprintf("BlockStore can only save contiguous blocks. Wanted %v, got %v", bs.Height()+1, height))
