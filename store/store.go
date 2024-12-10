@@ -191,6 +191,9 @@ func (bs *BlockStore) SaveBlock(block *types.Block, blockParts *types.PartSet, s
 // RemoveLatestBlock deletes the latest block from the store
 // and rewinds the latest height by 1.
 func (bs *BlockStore) RemoveLatestBlock() {
+	batch := bs.db.NewBatch()
+	defer batch.Close()
+
 	bs.mtx.RLock()
 	height := bs.Height()
 	bs.mtx.RUnlock()
@@ -198,19 +201,19 @@ func (bs *BlockStore) RemoveLatestBlock() {
 	blockMeta := bs.LoadBlockMeta(height)
 	// delete block parts
 	for i := 0; i < int(blockMeta.BlockID.PartsHeader.Total); i++ {
-		bs.db.Delete(calcBlockPartKey(height, i))
+		batch.Delete(calcBlockPartKey(height, i))
 	}
 
-	bs.db.Delete(calcBlockMetaKey(height))
-	bs.db.Delete(calcBlockCommitKey(height))
-	bs.db.Delete(calcSeenCommitKey(height))
+	batch.Delete(calcBlockMetaKey(height))
+	batch.Delete(calcBlockCommitKey(height))
+	batch.Delete(calcSeenCommitKey(height))
 
 	// rollback height
 	bs.mtx.Lock()
 	bs.height = height - 1
 	bs.mtx.Unlock()
 
-	// bs.db.SetSync(nil, nil)
+	batch.WriteSync()
 }
 
 func (bs *BlockStore) saveBlockPart(height int64, index int, part *types.Part) {
