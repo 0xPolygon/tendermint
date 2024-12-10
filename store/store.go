@@ -210,7 +210,7 @@ func (bs *BlockStore) RemoveLatestBlock() {
 	bs.height = height - 1
 	bs.mtx.Unlock()
 
-	bs.db.SetSync(nil, nil)
+	// bs.db.SetSync(nil, nil)
 }
 
 func (bs *BlockStore) saveBlockPart(height int64, index int, part *types.Part) {
