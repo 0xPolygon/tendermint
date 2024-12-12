@@ -87,7 +87,7 @@ func rollbackState(blockStoreDB, stateDB db.DB, forceRollback bool) (int64, []by
 	invalidState := state.LoadState(stateDB)
 
 	height := blockStore.Height()
-	// skip
+	// skip rollback if the state is already at the last block height
 	if height == invalidState.LastBlockHeight+1 && !forceRollback {
 		return invalidState.LastBlockHeight, invalidState.AppHash, nil
 	}

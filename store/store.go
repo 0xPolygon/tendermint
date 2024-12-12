@@ -208,6 +208,9 @@ func (bs *BlockStore) RemoveLatestBlock() {
 	batch.Delete(calcBlockCommitKey(height))
 	batch.Delete(calcSeenCommitKey(height))
 
+	// rollback BlockStoreStateJSON
+	BlockStoreStateJSON{Height: height - 1}.Save(bs.db)
+
 	// rollback height
 	bs.mtx.Lock()
 	bs.height = height - 1
