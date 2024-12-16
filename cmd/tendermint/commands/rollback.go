@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/state"
@@ -13,21 +14,24 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
+const flagForce = "force"
+
 func MakeRollbackStateCommand() *cobra.Command {
-	confg := cfg.DefaultConfig()
-	return &cobra.Command{
+	config := cfg.DefaultConfig()
+	cmd := &cobra.Command{
 		Use:   "rollback",
 		Short: "rollback tendermint state by one height",
 		Long: `
 A state rollback is performed to recover from an incorrect application state transition,
 when Tendermint has persisted an incorrect app hash and is thus unable to make
 progress. Rollback overwrites a state at height n with the state at height n - 1.
-The application should also roll back to height n - 1. No blocks are removed, so upon
-restarting Tendermint the transactions in block n will be re-executed against the
-application.
+The application should also roll back to height n - 1. Upon using the --force flag, tendermint
+will rollback the state and delete the block n from the blockstore. This is useful when the
+application returned a bad state upon processing the block n - 1.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			height, hash, err := RollbackState(confg)
+			forceRollback := viper.GetBool(flagForce)
+			height, hash, err := RollbackState(config, forceRollback)
 			if err != nil {
 				return fmt.Errorf("failed to rollback state: %w", err)
 			}
@@ -36,19 +40,26 @@ application.
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool(flagForce, false, "force rollback")
+	return cmd
 }
 
 // RollbackState takes the state at the current height n and overwrites it with the state
 // at height n - 1. Note state here refers to tendermint state not application state.
 // Returns the latest state height and app hash alongside an error if there was one.
-func RollbackState(config *cfg.Config) (int64, []byte, error) {
+func RollbackState(config *cfg.Config, forceRollback bool) (int64, []byte, error) {
 	// use the parsed config to load the block and state store
 	blocksdb, statedb, err := loadStateAndBlockStore(config)
+	defer func() {
+		blocksdb.Close()
+		statedb.Close()
+	}()
 	if err != nil {
 		return -1, nil, err
 	}
 	// rollback the last state
-	return rollbackState(blocksdb, statedb)
+	return rollbackState(blocksdb, statedb, forceRollback)
 }
 
 func loadStateAndBlockStore(cfg *cfg.Config) (db.DB, db.DB, error) {
@@ -71,17 +82,17 @@ func loadStateAndBlockStore(cfg *cfg.Config) (db.DB, db.DB, error) {
 	return blockStoreDB, stateDB, nil
 }
 
-func rollbackState(blockStoreDB, stateDB db.DB) (int64, []byte, error) {
+func rollbackState(blockStoreDB, stateDB db.DB, forceRollback bool) (int64, []byte, error) {
 	blockStore := store.NewBlockStore(blockStoreDB)
 	invalidState := state.LoadState(stateDB)
 
 	height := blockStore.Height()
-	// skip
-	if height == invalidState.LastBlockHeight+1 {
+	// skip rollback if the state is already at the last block height
+	if height == invalidState.LastBlockHeight+1 && !forceRollback {
 		return invalidState.LastBlockHeight, invalidState.AppHash, nil
 	}
 
-	if height != invalidState.LastBlockHeight {
+	if height != invalidState.LastBlockHeight && !forceRollback {
 		return -1, nil, fmt.Errorf("statestore height (%d) is not one below or equal to blockstore height (%d)",
 			invalidState.LastBlockHeight, height)
 	}
@@ -153,5 +164,6 @@ func rollbackState(blockStoreDB, stateDB db.DB) (int64, []byte, error) {
 
 	// saving the state
 	state.SaveState(stateDB, rolledBackState)
+	blockStore.RemoveLatestBlock()
 	return rolledBackState.LastBlockHeight, rolledBackState.AppHash, nil
 }
