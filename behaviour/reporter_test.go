@@ -37,7 +37,7 @@ type scriptItem struct {
 }
 
 // equalBehaviours returns true if a and b contain the same PeerBehaviours with
-// the same freequencies and otherwise false.
+// the same frequencies and otherwise false.
 func equalBehaviours(a []bh.PeerBehaviour, b []bh.PeerBehaviour) bool {
 	aHistogram := map[bh.PeerBehaviour]int{}
 	bHistogram := map[bh.PeerBehaviour]int{}
@@ -71,7 +71,7 @@ func equalBehaviours(a []bh.PeerBehaviour, b []bh.PeerBehaviour) bool {
 
 // TestEqualPeerBehaviours tests that equalBehaviours can tell that two slices
 // of peer behaviours can be compared for the behaviours they contain and the
-// freequencies that those behaviours occur.
+// frequencies that those behaviours occur.
 func TestEqualPeerBehaviours(t *testing.T) {
 	var (
 		peerID        p2p.ID = "MockPeer"

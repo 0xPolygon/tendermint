@@ -7,7 +7,7 @@ from .wire import decode_varint, encode
 from .reader import BytesBuffer
 from .msg import RequestDecoder, message_types
 
-# hold the asyncronous state of a connection
+# hold the asynchronous state of a connection
 # ie. we may not get enough bytes on one read to decode the message
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class Connection():
             raise IOError("dead connection")
         this.recBuf.write(data)
 
-# ABCI server responds to messges by calling methods on the app
+# ABCI server responds to messages by calling methods on the app
 
 class ABCIServer():
 
