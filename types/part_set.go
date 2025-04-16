@@ -15,6 +15,8 @@ import (
 var (
 	ErrPartSetUnexpectedIndex = errors.New("Error part set unexpected index")
 	ErrPartSetInvalidProof    = errors.New("Error part set invalid proof")
+	ErrPartTooBig             = errors.New("error part size too big")
+	ErrPartInvalidSize        = errors.New("error inner part with invalid size")
 )
 
 type Part struct {
@@ -29,7 +31,11 @@ func (part *Part) ValidateBasic() error {
 		return errors.New("negative Index")
 	}
 	if len(part.Bytes) > int(BlockPartSizeBytes) {
-		return errors.Errorf("too big: %d bytes, max: %d", len(part.Bytes), BlockPartSizeBytes)
+		return ErrPartTooBig
+	}
+	// All parts except the last one should have the same constant size.
+	if int(part.Index) < part.Proof.Total-1 && len(part.Bytes) != int(BlockPartSizeBytes) {
+		return ErrPartInvalidSize
 	}
 	if int(part.Index) != part.Proof.Index {
 		return errors.Errorf("part index %d != proof index %d", part.Index, part.Proof.Index)
@@ -206,6 +212,11 @@ func (ps *PartSet) AddPart(part *Part) (bool, error) {
 	// If part already exists, return false.
 	if ps.parts[part.Index] != nil {
 		return false, nil
+	}
+
+	// The proof should be compatible with the number of parts.
+	if part.Proof.Total != int(ps.total) {
+		return false, ErrPartSetInvalidProof
 	}
 
 	// Check hash proof
