@@ -118,7 +118,7 @@ func TestMain(m *testing.M) {
 	var cleanup cleanupFunc
 	state, _, cleanup = makeStateAndBlockStore(log.NewTMLogger(new(bytes.Buffer)))
 	block = makeBlock(1, state, new(types.Commit))
-	partSet = block.MakePartSet(2)
+	partSet = block.MakePartSet(types.BlockPartSizeBytes)
 	part1 = partSet.GetPart(0)
 	part2 = partSet.GetPart(1)
 	seenCommit1 = makeTestCommit(10, tmtime.Now())
@@ -142,9 +142,11 @@ func TestBlockStoreSaveLoadBlock(t *testing.T) {
 		}
 	}
 
-	// save a block
-	block := makeBlock(bs.Height()+1, state, new(types.Commit))
-	validPartSet := block.MakePartSet(2)
+	// save a block big enough to have two block parts
+	txs := []types.Tx{make([]byte, types.BlockPartSizeBytes)} // TX taking one block part alone
+	block, _ := state.MakeBlock(bs.Height()+1, txs, new(types.Commit), nil, state.Validators.GetProposer().Address)
+	validPartSet := block.MakePartSet(types.BlockPartSizeBytes)
+	require.GreaterOrEqual(t, validPartSet.Total(), uint32(2))
 	seenCommit := makeTestCommit(10, tmtime.Now())
 	bs.SaveBlock(block, partSet, seenCommit)
 	require.Equal(t, bs.Height(), block.Header.Height, "expecting the new height to be changed")
@@ -388,7 +390,7 @@ func TestBlockFetchAtHeight(t *testing.T) {
 	require.Equal(t, bs.Height(), int64(0), "initially the height should be zero")
 	block := makeBlock(bs.Height()+1, state, new(types.Commit))
 
-	partSet := block.MakePartSet(2)
+	partSet := block.MakePartSet(types.BlockPartSizeBytes)
 	seenCommit := makeTestCommit(10, tmtime.Now())
 	bs.SaveBlock(block, partSet, seenCommit)
 	require.Equal(t, bs.Height(), block.Header.Height, "expecting the new height to be changed")

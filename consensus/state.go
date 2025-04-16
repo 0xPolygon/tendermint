@@ -31,6 +31,7 @@ var (
 	ErrInvalidProposalPOLRound  = errors.New("Error invalid proposal POL round")
 	ErrAddingVote               = errors.New("Error adding vote")
 	ErrVoteHeightMismatch       = errors.New("Error vote height mismatch")
+	ErrProposalTooManyParts     = errors.New("proposal block has too many parts")
 )
 
 //-----------------------------------------------------------------------------
@@ -1443,6 +1444,15 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 	// Verify signature
 	if !cs.Validators.GetProposer().PubKey.VerifyBytes(proposal.SignBytes(cs.state.ChainID), proposal.Signature) {
 		return ErrInvalidProposalSignature
+	}
+
+	// Validate the proposed block size, derived from its PartSetHeader
+	maxBytes := cs.state.ConsensusParams.Block.MaxBytes
+	if maxBytes == -1 {
+		maxBytes = int64(types.MaxBlockSizeBytes)
+	}
+	if int64(proposal.BlockID.PartsHeader.Total) > (maxBytes-1)/int64(types.BlockPartSizeBytes)+1 {
+		return ErrProposalTooManyParts
 	}
 
 	cs.Proposal = proposal
