@@ -57,7 +57,7 @@ func (evR *EvidenceReactor) GetChannels() []*p2p.ChannelDescriptor {
 
 // AddPeer implements Reactor.
 func (evR *EvidenceReactor) AddPeer(peer p2p.Peer) {
-	go evR.broadcastEvidenceRoutine(peer)
+	// go evR.broadcastEvidenceRoutine(peer)
 }
 
 // Receive implements Reactor.
